@@ -7,23 +7,22 @@ const userModel = require('../models/userModel');
 
 const authentication = async(req, res, next) => {
         try {
-            let token = req.headers["x-api-key"];
-            if (!token) token = req.headers["x-Api-Key"];
-
-            if (!token) return res.status(400).send({ status: false, message: "token must be present" });
-
-            let decodedToken = jwt.verify(token, "group_31_functionUp", { ignoreExpiration: true });
-
-            if (!decodedToken) {
-                return res.status(400).send({ status: false, massage: "token is invalid" })
+            const token = req.header('Authorization', 'Bearer token')
+            if (!token) {
+                return res.status(400).send({ status: false, message: 'Missing required token in request' })
             }
-
+            const validToken = token.split(' ')
+            const decodedToken = jwt.verify(validToken[1], "securedprivatekey")
+            if (!decodedToken) {
+                return res.status(403).send({ status: false, message: 'Invalid token' })
+            }
             let exp = decodedToken.exp
             let iatNow = Math.floor(Date.now() / 1000)
             if (exp < iatNow) {
                 return res.status(401).send({ status: false, massage: 'session expired, please login again' })
             }
             req.decodedToken = decodedToken;
+            req.userId = decodedToken.userId
             next()
 
         } catch (err) {
