@@ -44,6 +44,6 @@ const userSchema = new mongoose.Schema({
                 pincode: { type: Number, required: true }
             }
         },
-    }, { timestamps: true }) // created at , updatedat
+    }, { timestamps: true }) // created at , updated at
 
 module.exports = mongoose.model("User", userSchema)

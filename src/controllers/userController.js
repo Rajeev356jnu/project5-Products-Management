@@ -15,6 +15,10 @@ const isValidRequestBody = function(requestBody) {
     return Object.keys(requestBody).length > 0
 }
 
+const isValidObjectId = function (ObjectId) {
+    return mongoose.Types.ObjectId.isValid(ObjectId)
+  }
+
 const createUser = async function(req, res) {
         try {
             const data = req.body
@@ -172,16 +176,12 @@ const getUserProfile=async function (req,res) {
 
 const updateUserProfile=async function (req,res) {
     try {
-        // const data=req.body
-        // const userIdFromToken=req.userId
-        // const userId=req.params.userId
-        // const files=req.files
         
-        // if (files) {
-        //     if (files && files.length>0) {
-        //         // const uploadedFileUrl=await 
-        //     }
-        // }
+     const userId = req.params.userId
+     if (!isValidObjectId(userId)) { 
+        return res.status(400).send({ status: false, message: "Valid userId is required" })
+       }
+
     } catch (error) {
         res.status(500).send({ status: false, error: err.message });
     }
