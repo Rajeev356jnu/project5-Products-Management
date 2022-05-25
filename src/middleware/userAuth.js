@@ -1,24 +1,70 @@
 const jwt = require('jsonwebtoken');
-// const { default: mongoose } = require("mongoose");
-// const userModel = require('../models/userModel');
+const { default: mongoose } = require("mongoose");
+const userModel = require('../models/userModel');
 
-const userAuth=async (req,res,next)=>{
+
+//----------------------------------------authentication----------------------------------------------------*/
+
+const authentication = async(req, res, next) => {
+        try {
+            let token = req.headers["x-api-key"];
+            if (!token) token = req.headers["x-Api-Key"];
+
+            if (!token) return res.status(400).send({ status: false, message: "token must be present" });
+
+            let decodedToken = jwt.verify(token, "group_31_functionUp", { ignoreExpiration: true });
+
+            if (!decodedToken) {
+                return res.status(400).send({ status: false, massage: "token is invalid" })
+            }
+
+            let exp = decodedToken.exp
+            let iatNow = Math.floor(Date.now() / 1000)
+            if (exp < iatNow) {
+                return res.status(401).send({ status: false, massage: 'session expired, please login again' })
+            }
+            req.decodedToken = decodedToken;
+            next()
+
+        } catch (err) {
+            console.log(err.massage)
+            res.status(500).send({ status: false, massage: err.message })
+        }
+    }
+    //--------------------------------------authentication end----------------------------------------------------*/
+
+//----------------------------------------authorization----------------------------------------------------*/
+
+let authorization = async(req, res, next) => {
     try {
-        const token=req.header('Authorization','Bearer token')
-        if (!token) {
-            return res.status(400).send({status:false,message:'Missing required token in request'})
-        }
-        const validToken=token.split(' ')
-        const decodedToken=jwt.verify(validToken[1],"group44")
-        if (!decodedToken) {
-            return res.status(403).send({status:false,message:'Invalid token'})
+
+        let userId = req.params.userId
+        const decodedToken = req.decodedToken
+
+        if (!userId) {
+            return res.status(400).send({ status: false, message: 'user Id is must be present !!!!!!!' });
+
+        } else if (mongoose.Types.ObjectId.isValid(userId) == false) {
+            return res.status(400).send({ status: false, message: "user id  is not valid !!!!!!" });
+
         }
 
-        req.userId=decodedToken.userId
-        next()
-    } catch (error) {
-        return res.status(500).send({ status:'error',msg: error.message });
+        let userById = await userModel.findOne({ _id: userId, isDeleted: false })
+
+        if (!userById) {
+            return res.status(404).send({ status: false, message: 'user Id is not found  !!!!!!!' });
+
+        } else if (decodedToken.userId != userById.userId) {
+            return res.status(403).send({ status: false, message: 'unauthorized access' });
+
+        }
+        next();
+    } catch (err) {
+        console.log(err.massage)
+        res.status(500).send({ status: false, massage: err.massage })
     }
 }
 
-module.exports={userAuth}
+module.exports = { authentication, authorization }
+
+//------------------------------------authorization end ----------------------------------------------------*/
