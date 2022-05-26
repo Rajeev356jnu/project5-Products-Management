@@ -88,26 +88,56 @@ const createUser = async function(req, res) {
         let parseaddress = JSON.parse(address)
 
         if (parseaddress) {
-            if (parseaddress.shipping) {
-                if (!isValid(parseaddress.shipping.street)) return res.status(400).send({ status: false, Message: "Please Provide your street name in shipping address" })
-                if (!isValid(parseaddress.shipping.city)) return res.status(400).send({ status: false, Message: "Please Provide your city name in shipping address" })
-                if (!isValid(parseaddress.shipping.pincode)) return res.status(400).send({ status: false, Message: "Please Provide your pincode in shipping address" })
+            if (parseaddress.shipping != undefined) {
+                if (parseaddress.shipping.street != undefined) {
+                    if (typeof parseaddress.shipping.street != 'string' || parseaddress.shipping.street.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "street can not be a empty string in shipping address" })
+                    }
+                }
+
+                if (parseaddress.shipping.city != undefined) {
+                    if (typeof parseaddress.shipping.city != 'string' || parseaddress.shipping.city.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "city can not be a empty string in shipping address" })
+                    }
+                }
+
+                if (parseaddress.shipping.pincode != undefined) {
+                    if (parseaddress.shipping.pincode.toString().trim().length == 0 || parseaddress.shipping.pincode.toString().trim().length != 6) {
+                        return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in shipping address" })
+                    }
+                }
             } else {
                 return res.status(400).send({ status: false, Message: "Please Provide your shipping address" })
             }
-            if (parseaddress.billing) {
-                if (!isValid(parseaddress.billing.street)) return res.status(400).send({ status: false, Message: "Please Provide your street name in shipping address" })
-                if (!isValid(parseaddress.billing.city)) return res.status(400).send({ status: false, Message: "Please Provide your city name in shipping address" })
-                if (!isValid(parseaddress.billing.pincode)) return res.status(400).send({ status: false, Message: "Please Provide your pincode in shipping address" })
+            if (parseaddress.billing != undefined) {
+                if (parseaddress.billing.street != undefined) {
+                    if (typeof parseaddress.billing.street != 'string' || parseaddress.billing.street.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "street can not be a empty string in billing address" })
+                    }
+                }
+
+                if (parseaddress.billing.city != undefined) {
+                    if (typeof parseaddress.billing.city != 'string' || parseaddress.billing.city.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "city can not be a empty string in billing address" })
+                    }
+                }
+
+                if (parseaddress.billing.pincode != undefined) {
+                    if (parseaddress.billing.pincode.toString().trim().length == 0 || parseaddress.billing.pincode.toString().trim().length != 6) {
+                        return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in billing address " })
+                    }
+                }
             } else {
-                return res.status(400).send({ status: false, Message: "Please Provide your billing address" })
+                return res.status(400).send({ status: false, Message: "Please Provide your shipping address" })
             }
         }
-
         const salt = await bcrypt.genSalt(10);
         data.password = await bcrypt.hash(password, salt);
         data.profileImage = await aws.uploadFile(files[0])
-        const userCreated = await userModel.create(data)
+
+        const userData = { fname: fname, lname: lname, profileImage: data.profileImage, email: email, phone: phone, password: data.password, address: parseaddress }
+
+        const userCreated = await userModel.create(userData)
         res.status(201).send({ status: true, message: "User Created Successfully", data: userCreated })
     } catch (err) {
         res.status(500).send({ status: false, error: err.message });
