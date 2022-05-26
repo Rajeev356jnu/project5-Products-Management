@@ -51,7 +51,7 @@ const getProduct=async function (req,res) {
           if (priceLessThan<=0) {
             return res.status(400).send({status:false,message:'price cannot be zero or less than zero'})  
           }
-          filter['price']['$gte']= Number(priceLessThan)         //to find products less than or equal to pricepoint
+          filter['price']['$lte']= Number(priceLessThan)         //to find products less than or equal to pricepoint
         }
 
         if (isValid(priceGreaterThan)) {
@@ -61,7 +61,7 @@ const getProduct=async function (req,res) {
             if (priceGreaterThan<=0) {
               return res.status(400).send({status:false,message:'price cannot be zero or less than zero'})  
             }
-            filter['price']['$lte']= Number(priceGreaterThan) //to find products less than or equal to pricepoint
+            filter['price']['$gte']= Number(priceGreaterThan) //to find products greater than or equal to pricepoint
         }
 
         if (isValid(priceSort)) {
