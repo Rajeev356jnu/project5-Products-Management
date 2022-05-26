@@ -128,7 +128,7 @@ const createUser = async function(req, res) {
                     }
                 }
             } else {
-                return res.status(400).send({ status: false, Message: "Please Provide your shipping address" })
+                return res.status(400).send({ status: false, Message: "Please Provide your billing address" })
             }
         }
         const salt = await bcrypt.genSalt(10);
