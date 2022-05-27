@@ -242,7 +242,7 @@ if (!/^(?:(?:\+|0{0,2})91(\s*|[\-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})
 return res.status(400).send({ status: false, msg: "please provide a valid phone number" })
 
 //    -------------------------  check phone duplicacy----------------------------------
-let mobileCheck = await userModel.findOne({ mobile:mobile })
+let mobileCheck = await userModel.findOne({ phone:phone })
 
     if (mobileCheck) { return res.status(409).send({ status: false, msg: "Mobile Number already exists" }) }}
     if ("password" in data) {
