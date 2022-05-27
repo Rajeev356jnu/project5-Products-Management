@@ -478,4 +478,25 @@ Refer below sample
   createdAt: "2021-09-17T04:25:07.803Z",
   updatedAt: "2021-09-17T04:25:07.803Z",
 }
+
+
+
+
+notes
+   // if (parseaddress) {
+        //     if (parseaddress.shipping) {
+        //         if (!isValid(parseaddress.shipping.street)) return res.status(400).send({ status: false, Message: "Please Provide your street name in shipping address" })
+        //         if (!isValid(parseaddress.shipping.city)) return res.status(400).send({ status: false, Message: "Please Provide your city name in shipping address" })
+        //         if (!isValid(parseaddress.shipping.pincode)) return res.status(400).send({ status: false, Message: "Please Provide your pincode in shipping address" })
+        //     } else {
+        //         return res.status(400).send({ status: false, Message: "Please Provide your shipping address" })
+        //     }
+        //     if (parseaddress.billing) {
+        //         if (!isValid(parseaddress.billing.street)) return res.status(400).send({ status: false, Message: "Please Provide your street name in shipping address" })
+        //         if (!isValid(parseaddress.billing.city)) return res.status(400).send({ status: false, Message: "Please Provide your city name in shipping address" })
+        //         if (!isValid(parseaddress.billing.pincode)) return res.status(400).send({ status: false, Message: "Please Provide your pincode in shipping address" })
+        //     } else {
+        //         return res.status(400).send({ status: false, Message: "Please Provide your billing address" })
+        //     }
+        // }
 ```
