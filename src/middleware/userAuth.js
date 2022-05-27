@@ -7,12 +7,15 @@ const userModel = require('../models/userModel');
 
 const authentication = async(req, res, next) => {
         try {
-            const token = req.header('Authorization', 'Bearer token')
+            const token = req.header('Authorization', 'Bearer Token')
+            console.log('token: ',token)
             if (!token) {
                 return res.status(400).send({ status: false, message: 'Missing required token in request' })
             }
             const validToken = token.split(' ')
+            console.log('validtoken',validToken)
             const decodedToken = jwt.verify(validToken[1], "securedprivatekey")
+            console.log('decodetoken',decodedToken)
             if (!decodedToken) {
                 return res.status(403).send({ status: false, message: 'Invalid token' })
             }

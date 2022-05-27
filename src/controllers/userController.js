@@ -190,6 +190,8 @@ const loginUser = async function(req, res) {
     }
 }
 
+
+//---------------------------------------getUserProfile-------------------------------------------------------------------//
 const getUserProfile = async function(req, res) {
     try {
         const userId = req.params.userId
@@ -204,24 +206,124 @@ const getUserProfile = async function(req, res) {
     }
 }
 
-
+//---------------------------------------updateUserProfile-------------------------------------------------------------------//
 const updateUserProfile = async function(req, res) {
     try {
-        // const data=req.body
-        // const userIdFromToken=req.userId
-        // const userId=req.params.userId
-        // const files=req.files
+        const userId = req.params.userId;
+        if (!isValidObjectId(userId)) {
+            return res.status(400).send({ status: false, message: " userId is not valid" })
+        }
+        const user = await userModel.findById(userId)
+        if (!user) {
+            return res.status(400).send({ status: false, msg: "Provided UserId  Does not exists" })
+        }
 
-        // if (files) {
-        //     if (files && files.length>0) {
-        //         // const uploadedFileUrl=await 
-        //     }
-        // }
-    } catch (error) {
-        res.status(500).send({ status: false, error: err.message });
+        const data = req.body
+        const { fname, lname, email, phone, password, address } = data
+
+        if (!Object.keys(data).length) {
+            return res.status(400).send({ status: false, msg: " provide some data to update." })
+        }
+
+        if ("fname" in data) {
+            if (!isValid(fname)) {
+                return res.status(400).send({ status: false, Message: "First name is required" })
+            }
+        }
+
+        if ("lname" in data) {
+
+            if (!isValid(lname)) {
+                return res.status(400).send({ status: false, Message: "Last name is required" })
+            }
+        }
+        if ("email" in data) {
+            if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(data.email))) {
+                return res.status(400).send({ status: false, msg: "Please provide a valid email" })
+            }
+
+            //    -------------------------  check email duplicacy----------------------------------
+            let emailCheck = await userModel.findOne({ email: email })
+
+            if (emailCheck) return res.status(409).send({ status: false, msg: "emailId already Registerd" })
+        }
+        if ("phone" in data) {
+            if (!/^(?:(?:\+|0{0,2})91(\s*|[\-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/.test(phone))
+                return res.status(400).send({ status: false, msg: "please provide a valid phone number" })
+
+            //    -------------------------  check phone duplicacy----------------------------------
+            let mobileCheck = await userModel.findOne({ mobile: mobile })
+
+            if (mobileCheck) { return res.status(409).send({ status: false, msg: "Mobile Number already exists" }) }
+        }
+        if ("password" in data) {
+            if (!isValid(password)) { return res.status(400).send({ status: false, message: "password is required" }) }
+            if (password.length < 8 || password.length > 15) {
+                return res.status(400).send({ status: false, message: "Your password must be at least 8 characters or not more than 15 charcters" })
+            }
+
+            if (password) {
+                password = await bcrypt.hash(password, 10)
+            }
+        }
+
+        let files = req.files
+        if (files && files.length > 0) {
+            let uploadedFileURL = await uploadFile(files[0])
+        }
+
+        if (address) {
+            if (address.shipping) {
+                if (!isValid(address.shipping.street)) {
+                    return res.status(400).send({ status: false, Message: "street name is required" })
+                }
+                if (!isValid(address.shipping.city)) {
+                    return res.status(400).send({ status: false, Message: "city name is required" })
+                }
+                if (!isValid(address.shipping.pincode)) {
+                    return res.status(400).send({ status: false, Message: "pincode is required" })
+                }
+            }
+
+            if (address.billing) {
+                if (!isValid(address.billing.street)) {
+                    return res.status(400).send({ status: false, Message: " street name is required in billing address" })
+                }
+
+                if (!isValid(address.billing.city)) {
+                    return res.status(400).send({ status: false, Message: " city name is required in billing address" })
+                }
+
+
+                if (!isValid(address.billing.pincode)) {
+                    return res.status(400).send({ status: false, Message: " pincodeis required in billing address" })
+                }
+            }
+        }
+
+        let updatedUser = await userModel.findOneAndUpdate({ _id: userId }, {
+            $set: {
+                fname: fname,
+                lname: lname,
+                email: email,
+                phone: phone,
+                password: password,
+                profileImage: uploadedFileURL,
+                "address.shipping.street": address.shipping.street,
+                "address.shipping.city": address.shipping.city,
+                "address.shipping.pincode": address.shipping.pincode,
+                "address.billing.street": address.billing.street,
+                "address.billing.city": address.billing.city,
+                "address.billing.pincode": address.billing.pincode,
+            }
+        }, { new: true })
+        return res.status(200).send({ status: true, msg: "User Updated Succesfully", data: updatedUser })
+
+    } catch (err) {
+        res.status(500).send({ status: false, Error: err.message })
     }
-}
 
+}
 
 
 module.exports = { createUser, loginUser, getUserProfile, updateUserProfile }
