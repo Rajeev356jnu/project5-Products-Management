@@ -105,7 +105,6 @@ const createProduct = async function(req, res) {
 const getProduct = async function(req, res) {
     try {
         const queryData = req.query
-            // const resultData={}
         let filter = { isDeleted: false }
         const { size, name, priceGreaterThan, priceLessThan, priceSort } = queryData
         // console.log(priceGreaterThan)

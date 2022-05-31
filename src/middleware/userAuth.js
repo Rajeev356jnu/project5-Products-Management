@@ -30,7 +30,7 @@ const authentication = async(req, res, next) => {
 
         } catch (err) {
             console.log(err.massage)
-            res.status(500).send({ status: false, massage: err.message })
+            res.status(500).send({ status: false, message: err.message })
         }
     }
     //--------------------------------------authentication end----------------------------------------------------*/
@@ -47,11 +47,11 @@ let authorization = async(req, res, next) => {
             return res.status(400).send({ status: false, message: 'user Id is must be present !!!!!!!' });
 
         } else if (mongoose.Types.ObjectId.isValid(userId) == false) {
-            return res.status(400).send({ status: false, message: "user id  is not valid !!!!!!" });
+            return res.status(400).send({ status: false, message: "user id is not valid !!!!!!" });
 
         }
 
-        let userById = await userModel.findOne({ _id: userId, isDeleted: false })
+        let userById = await userModel.findOne({ _id: userId})
 
         if (!userById) {
             return res.status(404).send({ status: false, message: 'user Id is not found  !!!!!!!' });
@@ -62,8 +62,8 @@ let authorization = async(req, res, next) => {
         }
         next();
     } catch (err) {
-        console.log(err.massage)
-        res.status(500).send({ status: false, massage: err.massage })
+        console.log(err.message)
+        res.status(500).send({ status: false, massage: err.message })
     }
 }
 
