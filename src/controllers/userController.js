@@ -1,7 +1,7 @@
 const userModel = require('../models/userModel')
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require('mongoose');
-const objectId = mongoose.Types.ObjectId
+// const objectId = mongoose.Types.ObjectId
 const bcrypt = require('bcrypt')
 const aws = require('../aws/aws')
 

@@ -1,7 +1,7 @@
-const productModel = require('../models/productModel')
 const { default: mongoose } = require('mongoose');
 const aws = require('../aws/aws')
 
+const productModel = require('../models/productModel');
 
 //---------------------------------------Valid Functions-------------------------------------------------------------------//
 const isValid = function(value) {
@@ -106,45 +106,76 @@ const createProduct = async function(req, res) {
 const getProduct = async function(req, res) {
     try {
         const queryData = req.query
-            // const resultData={}
         let filter = { isDeleted: false }
         const { size, name, priceGreaterThan, priceLessThan, priceSort } = queryData
+        // console.log(priceGreaterThan)
         if (isValid(size)) {
-
-            filter['availableSizes'] = size
+            let sizeKeys=['S','M','L','X','XS','XL','XXL']
+            const sizeArray=size.trim().split(',').map(value=>value.trim().toUpperCase())
+            for (let i = 0; i < sizeArray.length; i++) {
+                const sizePresent=sizeKeys.includes(sizeArray[i])
+                if (!sizePresent) {
+                    return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })
+                }
+            }
+    
+            filter['availableSizes'] = sizeArray
         }
 
         if (isValid(name)) {
 
-            filter['title'] = name
-        }
+            filter['title'] = {$regex:name,$options:'i'}
 
-        if (isValid(priceLessThan)) {
-            if (isNaN(Number(priceLessThan))) {
-                return res.status(400).send({ status: false, message: 'please enter a valid number' })
-            }
-            if (priceLessThan <= 0) {
-                return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
-            }
-            filter['price']['$lte'] = Number(priceLessThan) //to find products less than or equal to pricepoint
         }
-
-        if (isValid(priceGreaterThan)) {
-            if (isNaN(Number(priceGreaterThan))) {
-                return res.status(400).send({ status: false, message: 'please enter a valid number' })
+        let flag=true
+        
+        if (flag) {
+            if ("priceLessThan" in queryData && 'priceGreaterThan' in queryData) {
+                if (isNaN(Number(priceLessThan)) || isNaN(Number(priceGreaterThan))) {
+                    return res.status(400).send({ status: false, message: 'please enter a valid price' })
+                }
+                if (priceGreaterThan <= 0 || priceLessThan<=0) {
+                    return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
+                }
+                filter['price']={$gte:Number(priceGreaterThan),$lte:Number(priceLessThan)}
+                flag=false
             }
-            if (priceGreaterThan <= 0) {
-                return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
-            }
-            filter['price']['$gte'] = Number(priceGreaterThan) //to find products greater than or equal to pricepoint
         }
+        
+        if (flag) {
+            if (isValid(priceLessThan)) {
+                if (isNaN(Number(priceLessThan))) {
+                    return res.status(400).send({ status: false, message: 'please enter a valid price' })
+                }
+                if (priceLessThan <= 0) {
+                    return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
+                }
+               
+                filter['price']={ $lte:Number(priceLessThan) } //to find products less than or equal to pricepoint
+    
+            }
+            
+            
+    
+            if (isValid(priceGreaterThan)) {
+                if (isNaN(Number(priceGreaterThan))) {
+                    return res.status(400).send({ status: false, message: 'please enter a valid price' })
+                }
+                if (priceGreaterThan <= 0) {
+                    return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
+                }
+                filter['price']= {$gte:Number(priceGreaterThan)} //to find products greater than or equal to pricepoint
+            }
+    
+        }
+        // console.log(flag)
 
         if (isValid(priceSort)) {
             if (!(priceSort == 1 || priceSort == -1)) {
                 return res.status(400).send({ status: false, message: 'price sort should be 1 or -1' })
             }
         }
-
+        console.log(filter)
         const products = await productModel.find(filter).sort({ price: priceSort })
         if (products.length === 0) {
             return res.status(400).send({ status: false, message: 'No product found' })
