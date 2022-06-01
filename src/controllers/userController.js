@@ -219,7 +219,8 @@ const updateUserProfile = async function(req, res) {
         }
 
         const data = req.body
-        const { fname, lname, email, phone, password, address } = data
+        const { fname, lname, email, phone,profileImage, password,address } = data
+        const dataObject = {};
 
         if (!Object.keys(data).length) {
             return res.status(400).send({ status: false, msg: " provide some data to update." })
@@ -252,9 +253,9 @@ const updateUserProfile = async function(req, res) {
                 return res.status(400).send({ status: false, msg: "please provide a valid phone number" })
 
             //    -------------------------  check phone duplicacy----------------------------------
-            let mobileCheck = await userModel.findOne({ mobile: mobile })
+            let phoneCheck = await userModel.findOne({ phone: phone })
 
-            if (mobileCheck) { return res.status(409).send({ status: false, msg: "Mobile Number already exists" }) }
+            if (phoneCheck) { return res.status(409).send({ status: false, msg: "Phone Number already exists" }) }
         }
         if ("password" in data) {
             if (!isValid(password)) { return res.status(400).send({ status: false, message: "password is required" }) }
@@ -267,56 +268,96 @@ const updateUserProfile = async function(req, res) {
             }
         }
 
+        // if ("profileImage" in data) {
+            
         let files = req.files
         if (files && files.length > 0) {
-            let uploadedFileURL = await uploadFile(files[0])
+             let uploadFileUrl = await aws.uploadFile(files[0])
+             dataObject['profileImage'] = uploadFileUrl
+            
         }
 
-        if (address) {
-            if (address.shipping) {
-                if (!isValid(address.shipping.street)) {
-                    return res.status(400).send({ status: false, Message: "street name is required" })
-                }
-                if (!isValid(address.shipping.city)) {
-                    return res.status(400).send({ status: false, Message: "city name is required" })
-                }
-                if (!isValid(address.shipping.pincode)) {
-                    return res.status(400).send({ status: false, Message: "pincode is required" })
-                }
-            }
+        //  if (address) {
+        //     if (address.shipping) {
+      
+        // if (address.shipping.street) {
 
-            if (address.billing) {
-                if (!isValid(address.billing.street)) {
-                    return res.status(400).send({ status: false, Message: " street name is required in billing address" })
-                }
-
-                if (!isValid(address.billing.city)) {
-                    return res.status(400).send({ status: false, Message: " city name is required in billing address" })
-                }
+        //         dataObject['address.shipping.street'] = address.shipping.street
+        //     }}}
 
 
-                if (!isValid(address.billing.pincode)) {
-                    return res.status(400).send({ status: false, Message: " pincodeis required in billing address" })
-                }
-            }
-        }
 
-        let updatedUser = await userModel.findOneAndUpdate({ _id: userId }, {
-            $set: {
-                fname: fname,
-                lname: lname,
-                email: email,
-                phone: phone,
-                password: password,
-                profileImage: uploadedFileURL,
-                "address.shipping.street": address.shipping.street,
-                "address.shipping.city": address.shipping.city,
-                "address.shipping.pincode": address.shipping.pincode,
-                "address.billing.street": address.billing.street,
-                "address.billing.city": address.billing.city,
-                "address.billing.pincode": address.billing.pincode,
-            }
-        }, { new: true })
+           
+
+            if (address) {
+                 let parseaddress = JSON.parse(address)
+                 console.log(parseaddress)
+                //  data.address2 = parseaddress
+                // console.log(data.address2)
+                if ((parseaddress).shipping != undefined) {
+             if ((parseaddress).shipping.street != undefined) {
+     if (typeof (parseaddress).shipping.street != 'string' || (parseaddress).shipping.street.trim().length == 0) {
+    return res.status(400).send({ status: false, message: "street can not be a empty string in shipping parseaddress" })
+                        }
+                        else{
+                            dataObject['address.shipping.street'] = parseaddress.shipping.street
+                            console.log(dataObject)
+                        }
+             
+                    }}}
+              // if (address.shipping.street) {
+            // if (!isValid(address.shipping.street)) {
+            //     return res.status(400).send({ status: false, Message: "street name is required" })
+            // } 
+
+            // dataObject['address.shipping.street'] = address.shipping.street
+        
+
+          //         if (!isValid(address.shipping.street)) {
+        //             return res.status(400).send({ status: false, Message: "street name is required" })
+        //         }
+        //         if (!isValid(address.shipping.city)) {
+        //             return res.status(400).send({ status: false, Message: "city name is required" })
+        //         }
+        //         if (!isValid(address.shipping.pincode)) {
+        //             return res.status(400).send({ status: false, Message: "pincode is required" })
+        //         }
+        //     }
+
+        //     if (address.billing) {
+        //         if (!isValid(address.billing.street)) {
+        //             return res.status(400).send({ status: false, Message: " street name is required in billing address" })
+        //         }
+
+        //         if (!isValid(address.billing.city)) {
+        //             return res.status(400).send({ status: false, Message: " city name is required in billing address" })
+        //         }
+
+
+        //         if (!isValid(address.billing.pincode)) {
+        //             return res.status(400).send({ status: false, Message: " pincodeis required in billing address" })
+        //         }
+        //     }
+         
+
+        // let updatedUser = await userModel.findOneAndUpdate({ _id: userId }, {
+        //     $set: {
+        //         fname: fname,
+        //         lname: lname,
+        //         email: email,
+        //         phone: phone,
+        //         password: password,
+                // profileImage:uploadedFileUrl,
+            //     "address.shipping.street": address.shipping.street,
+            //     "address.shipping.city": address.shipping.city,
+            //     "address.shipping.pincode": address.shipping.pincode,
+            //     "address.billing.street": address.billing.street,
+            //     "address.billing.city": address.billing.city,
+            //     "address.billing.pincode": address.billing.pincode,
+        //      }
+        // },dataObject, { new: true })
+            const updatedUser = await userModel.findOneAndUpdate({ _id: userId }, dataObject, { new: true })
+
         return res.status(200).send({ status: true, msg: "User Updated Succesfully", data: updatedUser })
 
     } catch (err) {
