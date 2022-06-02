@@ -22,7 +22,7 @@ const authentication = async(req, res, next) => {
             let exp = decodedToken.exp
             let iatNow = Math.floor(Date.now() / 1000)
             if (exp < iatNow) {
-                return res.status(401).send({ status: false, massage: 'session expired, please login again' })
+                return res.status(401).send({ status: false, message: 'session expired, please login again' })
             }
             req.decodedToken = decodedToken;
             req.userId = decodedToken.userId
@@ -63,7 +63,7 @@ let authorization = async(req, res, next) => {
         next();
     } catch (err) {
         console.log(err.message)
-        res.status(500).send({ status: false, massage: err.message })
+        res.status(500).send({ status: false, message: err.message })
     }
 }
 

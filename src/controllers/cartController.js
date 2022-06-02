@@ -46,7 +46,6 @@ const createCart=async function(req,res){
         const filterData={userId:userId,items:[],totalPrice:0,totalItems:0}
         
         const cart=await cartModel.findOne({userId:userId})
-        // console.log(cart)
         if (!cart) {
            const productObj={}
            productObj['productId']=productId
@@ -154,7 +153,6 @@ const updateCart=async function (req,res) {
                         return res.status(200).send({status:true,message:'Quantity has been updated in the cart successfully',data:updatedItemsAndPrice})
                     }  
                 }
-        
         
             }
         }
