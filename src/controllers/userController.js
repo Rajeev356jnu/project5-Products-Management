@@ -197,7 +197,7 @@ const getUserProfile = async function (req, res) {
         if (!isValidObjectId(userId)) return res.status(400).send({ status: false, message: 'userid is invalid' })
         const resultData = await userModel.findById(userId)
         if (!resultData) {
-            return res.status(400).send({ status: false, message: 'userid does not exist' })
+            return res.status(404).send({ status: false, message: 'userid not found' })
         }
         return res.status(200).send({ status: true, message: 'User Details', data: resultData })
     } catch (err) {
@@ -218,10 +218,11 @@ const updateUserProfile = async function (req, res) {
         }
 
         const data = req.body
-        const { fname, lname, email, phone, profileImage, password, address } = data
+        let files = req.files
+        const { fname, lname, email, phone, password, address } = data
         const dataObject = {};
 
-        if (!Object.keys(data).length) {
+        if (!Object.keys(data).length && typeof files==='undefined') {
             return res.status(400).send({ status: false, msg: " provide some data to update." })
         }
 
@@ -273,7 +274,7 @@ const updateUserProfile = async function (req, res) {
 
 
 
-        let files = req.files
+      
         if (files && files.length > 0) {
             let uploadFileUrl = await aws.uploadFile(files[0])
             dataObject['profileImage'] = uploadFileUrl

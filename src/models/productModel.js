@@ -20,16 +20,16 @@ const productSchema = new mongoose.Schema({
         },
         currencyId: {
             type: String,
-            required: true, //It should be in INR
+            required: true //It should be in INR
         },
         currencyFormat: {
             type: String,
             required: true,
-            trim: true, //Rupee Symbol should be there
+            trim: true //Rupee Symbol should be there
         },
         isFreeShipping: {
             type: Boolean,
-            default: false,
+            default: false
         },
         productImage: {
             type: String,

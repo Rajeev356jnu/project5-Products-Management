@@ -18,21 +18,101 @@ const isValidObjectId = function(objectId) {
     return mongoose.Types.ObjectId.isValid(objectId)
 }
 
-const createOrder=async function (req,res) {
+//---------------------------------------Create Order-------------------------------------------------------------------//
+
+
+const createOrder = async(req, res) => {
     try {
+        let userId = req.params.userId
+        let data = req.body
+        let { cartId, cancellable, status } = data
+
+        if (isValidObjectId(userId)) {
+            return res.status(400).send({ status: false, message: "userId is invalid!" })
+        }
+
+        const isUserExists = await userModel.findById(userId)
+        if (!isUserExists) {
+            return res.status(404).send({ status: false, message: "user not found" })
+        }
+
+        if (!isValidRequestBody(data)) {
+            return res.status(400).send({ status: false, message: "Please provide cartId, Cancellable, Status" })
+        }
+
+        if (!isValid(cartId)) {
+            return res.status(400).send({ status: false, message: "Please enter CartId" })
+        }
+        if (!isValidObjectId(cartId)) {
+            return res.status(400).send({ status: false, message: "cartId is invalid!" })
+        }
+
+        const findCart = await cartModel.findOne({ _id: cartId, userId: userId })
+        if (!findCart) {
+            return res.status(400).send({ status: false, message: "No Cart found" })
+        }
+
+        let itemsArr = findCart.items
+        if (itemsArr.length == 0) {
+            return res.status(400).send({ status: false, message: "Cart is Empty" })
+        }
+
+        let sum = 0
+        for (let i of itemsArr) {
+            sum += i.quantity
+        }
+
+        let newData = {
+            userId: userId,
+            items: findCart.items,
+            totalPrice: findCart.totalPrice,
+            totalQuantity: sum,
+        }
+
+        //is Cancellable key available?
+        if ("cancellable" in data) {
+            if (!isValid(cancellable)) {
+                return res.status(400).send({ status: false, message: "Please enter cancellable" });
+            }
+              //cancellable must be boolean
+            if (!['true', 'false'].includes(cancellable)) {
+                return res.status(400).send({ status: false, message: "Cancellable must be a Boolean Value" });
+            }
+            newData.cancellable = cancellable
+        }
+
         
+        if ("status" in data) {
+            if (!isValid(status)) {
+                return res.status(400).send({ status: false, message: "Please enter status" });
+            }
+        }
+        if (!["pending", "completed", "cancelled"].includes(status)) {
+            return res.status(400).send({ status: false, message: "Status must be a pending, completed, cancelled" });
+        }
+
+        newData.status = status
+
+        const orderCreated = await orderModel.create(newData)
+
+        findCart.items = []
+        findCart.totalItems = 0
+        findCart.totalPrice = 0
+        findCart.save()
+        return res.status(200).send({ status: false, message: "Success", data: orderCreated });
     } catch (error) {
-        return res.status(500).send({status:false,message:error.message})
+        return res.status(500).send({ status: false, message: error.message });
     }
 }
+
+
 
 const updateOrder=async function (req,res) {
     try {
         const userId=req.params.userId
         const {orderId}=req.body
-        if (Object.keys(userId)==0) {
-            return res.status(400).send({status:false,message:'kindly provide userid in path params'})
-        }
+        
+        
         if (!isValidObjectId(userId)) {
             return res.status(400).send({status:false,message:'invalid userid!!'})
         }
@@ -41,7 +121,7 @@ const updateOrder=async function (req,res) {
             return res.status(404).send({status:false,message:'user not found'})
         }
         if (!isValidRequestBody(req.body)) {
-            return res.status(400).send({status:false,message:'provide appropriate details in request body'})
+            return res.status(400).send({status:false,message:'provide appropriate orderId in request body'})
         }
         if (!isValid(orderId)) {
             return res.status(400).send({status:false,message:'enter orderId'})

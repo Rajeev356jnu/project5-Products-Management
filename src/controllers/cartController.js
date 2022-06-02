@@ -36,6 +36,9 @@ const createCart=async function(req,res){
         if (!isValidRequestBody(req.body)) {
             return res.status(400).send({status:false,message:'kindly provide productid in request body'})
         }
+        if (!isValid(productId)) {
+            return res.status(400).send({status:false,message:'please enter productId'})
+        }
         if (!isValidObjectId(productId)) {
             return res.status(400).send({status:false,message:'Invalid productid'})
         }
@@ -54,7 +57,7 @@ const createCart=async function(req,res){
            filterData['totalItems']=1
            filterData['totalPrice']+=product.price
            const cartData= await cartModel.create(filterData)
-           return res.status(201).send({status:true,message:'product has been added in the cart',data:cartData})
+           return res.status(201).send({status:true,message:'cart created & product has been added in the cart',data:cartData})
         }
         const item=cart.items
         for (let i = 0; i < item.length; i++) {
