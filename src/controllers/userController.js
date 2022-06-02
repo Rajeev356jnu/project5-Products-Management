@@ -1,12 +1,11 @@
 const userModel = require('../models/userModel')
 const jwt = require("jsonwebtoken");
 const { default: mongoose } = require('mongoose');
-// const objectId = mongoose.Types.ObjectId
 const bcrypt = require('bcrypt')
 const aws = require('../aws/aws')
 
 //---------------------------------------Valid Functions-------------------------------------------------------------------//
-const isValid = function(value) {
+const isValid = function (value) {
 
     if (!value || typeof value != "string" || value.trim().length == 0) return false;
     return true;
@@ -16,16 +15,16 @@ const isValidFiles = (files) => {
         return true;
 }
 
-const isValidRequestBody = function(requestBody) {
+const isValidRequestBody = function (requestBody) {
     return Object.keys(requestBody).length > 0
 }
 
-const isValidObjectId = function(objectId) {
+const isValidObjectId = function (objectId) {
     return mongoose.Types.ObjectId.isValid(objectId)
 }
 
 //---------------------------------------Create User-------------------------------------------------------------------//
-const createUser = async function(req, res) {
+const createUser = async function (req, res) {
     try {
         const data = req.body
         const files = req.files
@@ -146,7 +145,7 @@ const createUser = async function(req, res) {
 
 //---------------------------------------Login User-------------------------------------------------------------------//
 
-const loginUser = async function(req, res) {
+const loginUser = async function (req, res) {
     try {
         const data = req.body;
         let { email, password } = data
@@ -192,7 +191,7 @@ const loginUser = async function(req, res) {
 
 
 //---------------------------------------getUserProfile-------------------------------------------------------------------//
-const getUserProfile = async function(req, res) {
+const getUserProfile = async function (req, res) {
     try {
         const userId = req.params.userId
         if (!isValidObjectId(userId)) return res.status(400).send({ status: false, message: 'userid is invalid' })
@@ -207,7 +206,7 @@ const getUserProfile = async function(req, res) {
 }
 
 //---------------------------------------updateUserProfile-------------------------------------------------------------------//
-const updateUserProfile = async function(req, res) {
+const updateUserProfile = async function (req, res) {
     try {
         const userId = req.params.userId;
         if (!isValidObjectId(userId)) {
@@ -219,7 +218,8 @@ const updateUserProfile = async function(req, res) {
         }
 
         const data = req.body
-        const { fname, lname, email, phone, password, address } = data
+        const { fname, lname, email, phone, profileImage, password, address } = data
+        const dataObject = {};
 
         if (!Object.keys(data).length) {
             return res.status(400).send({ status: false, msg: " provide some data to update." })
@@ -229,6 +229,7 @@ const updateUserProfile = async function(req, res) {
             if (!isValid(fname)) {
                 return res.status(400).send({ status: false, Message: "First name is required" })
             }
+            dataObject['fname'] = fname
         }
 
         if ("lname" in data) {
@@ -236,6 +237,7 @@ const updateUserProfile = async function(req, res) {
             if (!isValid(lname)) {
                 return res.status(400).send({ status: false, Message: "Last name is required" })
             }
+            dataObject['lname'] = lname
         }
         if ("email" in data) {
             if (!(/^\w+([\.-]?\w+)@\w+([\. -]?\w+)(\.\w{2,3})+$/.test(data.email))) {
@@ -246,81 +248,116 @@ const updateUserProfile = async function(req, res) {
             let emailCheck = await userModel.findOne({ email: email })
 
             if (emailCheck) return res.status(409).send({ status: false, msg: "emailId already Registerd" })
+            dataObject['email'] = email
         }
         if ("phone" in data) {
             if (!/^(?:(?:\+|0{0,2})91(\s*|[\-])?|[0]?)?([6789]\d{2}([ -]?)\d{3}([ -]?)\d{4})$/.test(phone))
                 return res.status(400).send({ status: false, msg: "please provide a valid phone number" })
 
             //    -------------------------  check phone duplicacy----------------------------------
-            let mobileCheck = await userModel.findOne({ mobile: mobile })
+            let phoneCheck = await userModel.findOne({ phone: phone })
 
-            if (mobileCheck) { return res.status(409).send({ status: false, msg: "Mobile Number already exists" }) }
+            if (phoneCheck) { return res.status(409).send({ status: false, msg: "Phone Number already exists" }) }
+            dataObject['phone'] = phone
         }
-        if ("password" in data) {
+        if (password) {
+            let password1 = await bcrypt.hash(password, 10)
             if (!isValid(password)) { return res.status(400).send({ status: false, message: "password is required" }) }
             if (password.length < 8 || password.length > 15) {
                 return res.status(400).send({ status: false, message: "Your password must be at least 8 characters or not more than 15 charcters" })
             }
 
-            if (password) {
-                password = await bcrypt.hash(password, 10)
-            }
+           
+            dataObject['password'] = password1
         }
+
+
 
         let files = req.files
         if (files && files.length > 0) {
-            let uploadedFileURL = await uploadFile(files[0])
+            let uploadFileUrl = await aws.uploadFile(files[0])
+            dataObject['profileImage'] = uploadFileUrl
+
         }
 
         if (address) {
-            if (address.shipping) {
-                if (!isValid(address.shipping.street)) {
-                    return res.status(400).send({ status: false, Message: "street name is required" })
+            let parseaddress = JSON.parse(address)
+            if ((parseaddress).shipping != undefined) {
+                if ((parseaddress).shipping.street != undefined) {
+                    if (typeof (parseaddress).shipping.street != 'string' || (parseaddress).shipping.street.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "street can not be a empty string in shipping parseaddress" })
+                    }
+
+                    else {
+                        dataObject['address.shipping.street'] = parseaddress.shipping.street
+
+                    }
                 }
-                if (!isValid(address.shipping.city)) {
-                    return res.status(400).send({ status: false, Message: "city name is required" })
+                if ((parseaddress).shipping.city != undefined) {
+                    if (typeof (parseaddress).shipping.city != 'string' || (parseaddress).shipping.city.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "city can not be a empty string in shipping parseaddress" })
+                    }
+
+                    else {
+                        dataObject['address.shipping.city'] = parseaddress.shipping.city
+                    }
                 }
-                if (!isValid(address.shipping.pincode)) {
-                    return res.status(400).send({ status: false, Message: "pincode is required" })
+
+
+                if (parseaddress.shipping.pincode != undefined) {
+                    if (parseaddress.shipping.pincode.toString().trim().length == 0 || parseaddress.shipping.pincode.toString().trim().length != 6) {
+                        return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in shipping address" })
+                    }
+
+
+                    else {
+                        dataObject['address.shipping.pincode'] = parseaddress.shipping.pincode
+                    }
                 }
             }
 
-            if (address.billing) {
-                if (!isValid(address.billing.street)) {
-                    return res.status(400).send({ status: false, Message: " street name is required in billing address" })
+            if (parseaddress.billing != undefined) {
+                if (parseaddress.billing.street != undefined) {
+                    if (typeof parseaddress.billing.street != 'string' || parseaddress.billing.street.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "street can not be a empty string in billing address" })
+                    }
+
+                    else {
+                        dataObject['address.billing.street'] = parseaddress.billing.street
+                        
+
+                    }
                 }
 
-                if (!isValid(address.billing.city)) {
-                    return res.status(400).send({ status: false, Message: " city name is required in billing address" })
+
+                if (parseaddress.billing.city != undefined) {
+                    if (typeof parseaddress.billing.city != 'string' || parseaddress.billing.city.trim().length == 0) {
+                        return res.status(400).send({ status: false, message: "city can not be a empty string in billing address" })
+                    }
+                    else {
+                        dataObject['address.billing.city'] = parseaddress.billing.city
+
+                    }
                 }
 
 
-                if (!isValid(address.billing.pincode)) {
-                    return res.status(400).send({ status: false, Message: " pincodeis required in billing address" })
+                if (parseaddress.billing.pincode != undefined) {
+                    if (parseaddress.billing.pincode.toString().trim().length == 0 || parseaddress.billing.pincode.toString().trim().length != 6) {
+                        return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in billing address " })
+                    }
+                    else {
+                        dataObject['address.billing.pincode'] = parseaddress.billing.pincode
+                    }
                 }
             }
         }
 
-        let updatedUser = await userModel.findOneAndUpdate({ _id: userId }, {
-            $set: {
-                fname: fname,
-                lname: lname,
-                email: email,
-                phone: phone,
-                password: password,
-                profileImage: uploadedFileURL,
-                "address.shipping.street": address.shipping.street,
-                "address.shipping.city": address.shipping.city,
-                "address.shipping.pincode": address.shipping.pincode,
-                "address.billing.street": address.billing.street,
-                "address.billing.city": address.billing.city,
-                "address.billing.pincode": address.billing.pincode,
-            }
-        }, { new: true })
+        const updatedUser = await userModel.findOneAndUpdate({ _id: userId }, dataObject, { new: true })
+
         return res.status(200).send({ status: true, msg: "User Updated Succesfully", data: updatedUser })
 
     } catch (err) {
-        res.status(500).send({ status: false, Error: err.message })
+        res.status(500).send({ status: false, error: err.message })
     }
 
 }
