@@ -162,8 +162,6 @@ const getProduct = async function(req, res) {
                 filter['price']={ $lte:Number(priceLessThan) } //to find products less than or equal to pricepoint
     
             }
-            
-            
     
             if (isValid(priceGreaterThan)) {
                 if (isNaN(Number(priceGreaterThan))) {
@@ -177,7 +175,6 @@ const getProduct = async function(req, res) {
     
         }
         
-
         if (isValid(priceSort)) {
             if (!(priceSort == 1 || priceSort == -1)) {
                 return res.status(400).send({ status: false, message: 'price sort should be 1 or -1' })

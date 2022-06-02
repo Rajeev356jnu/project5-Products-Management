@@ -94,7 +94,7 @@ const updateCart=async function (req,res) {
         }
         const checkUserId=await userModel.findById(userId)
         if (!checkUserId) {
-            return res.status(404).send({status:false,message:'this userid not found'})
+            return res.status(404).send({status:false,message:'this user not found'})
         }
         if (!isValid(cartId)) {
             return res.status(400).send({status:false,message:'please provide cartid in request body'})
@@ -135,6 +135,7 @@ const updateCart=async function (req,res) {
                     return res.status(200).send({status:true,message:'product has been removed successfully from the cart',data:updatedItemsAndPrice})
                 }         
             }
+            return res.status(404).send({status:false,message:'product not found in the cart'})
         }
         if (removeProduct==1) {
             for (let i = 0; i < cart.items.length; i++) {
@@ -158,6 +159,7 @@ const updateCart=async function (req,res) {
                 }
         
             }
+            return res.status(404).send({status:false,message:'product not found in the cart'})
         }
         
     } catch (error) {
