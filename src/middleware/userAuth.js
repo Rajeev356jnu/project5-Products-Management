@@ -9,7 +9,7 @@ const jwt = require("jsonwebtoken");
 const authentication = async function (req, res, next) {
     try {
         let token = req.header('Authorization', 'Bearer Token');
-        if (!token) return res.status(400).send({ status: false, message: "login is required, Set an auth" })
+        if (!token) return res.status(400).send({ status: false, message: "login is required" })
 
         let splitToken = token.split(" ")
 
@@ -19,7 +19,7 @@ const authentication = async function (req, res, next) {
                let exp = verifiedtoken.exp
             let iatNow = Math.floor(Date.now() / 1000)
             if (exp < iatNow) {
-                return res.status(401).send({ status: false, message: "session expired" })
+                return res.status(401).send({ status: false, message: 'session expired, please login again' })
             }
 
         next();

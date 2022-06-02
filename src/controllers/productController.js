@@ -29,7 +29,7 @@ const createProduct = async function(req, res) {
     try {
         const data = req.body
         const files = req.files
-        let { title, description, price, currencyId, currencyFormat, isFreeShipping, productImage, style, availableSizes, installments } = data
+        let { title, description, price, currencyId, currencyFormat, isFreeShipping,productImage, style, availableSizes, installments } = data
 
         const priceValidator = /^(?:0|[1-9]\d*)(?:\.(?!.*000)\d+)?$/
 
@@ -65,8 +65,16 @@ const createProduct = async function(req, res) {
         if (!isValid(currencyFormat)) {
             return res.status(400).send({ status: false, message: "CurrencyFormat is required" })
         }
-        if (currencyFormat !== '$') {
-            return res.status(400).send({ status: false, message: "Currency Format Should be in $" })
+        if (currencyFormat !== '₹') {
+            return res.status(400).send({ status: false, message: "Currency Format Should be in ₹" })
+        }
+        if ("isFreeShipping" in data) {
+            if (!isValid(isFreeShipping)) {
+                return res.status(400).send({ status: false, message: "Please enter isfreeshipping" });
+            }
+            if (!['true', 'false'].includes(isFreeShipping)) {
+                return res.status(400).send({ status: false, message: "isFreeshipping must be a Boolean Value" });
+            }
         }
 
         if (!isValidFiles(files)) {
@@ -91,7 +99,7 @@ const createProduct = async function(req, res) {
 
         productImage = await aws.uploadFile(files[0])
 
-        const productData = { title: title, description: description, price: price, currencyId: currencyId, currencyFormat: currencyFormat, isFreeShipping: isFreeShipping, productImage: productImage, style: style, availableSizes: availableSize, installments: installments }
+        const productData = { title: title, description: description, price: price, currencyId: currencyId, currencyFormat: currencyFormat, productImage: productImage, isFreeShipping:isFreeShipping,style: style, availableSizes: availableSize, installments: installments }
 
         const productCreated = await productModel.create(productData)
         res.status(201).send({ status: true, message: "Product Created Successfully", data: productCreated })
@@ -168,14 +176,14 @@ const getProduct = async function(req, res) {
             }
     
         }
-        // console.log(flag)
+        
 
         if (isValid(priceSort)) {
             if (!(priceSort == 1 || priceSort == -1)) {
                 return res.status(400).send({ status: false, message: 'price sort should be 1 or -1' })
             }
         }
-        console.log(filter)
+        
         const products = await productModel.find(filter).sort({ price: priceSort })
         if (products.length === 0) {
             return res.status(400).send({ status: false, message: 'No product found' })
@@ -201,7 +209,7 @@ const getProductById = async function(req, res) {
         }
         const product = await productModel.findById(productId)
         if (!product) {
-            return res.status(400).send({ status: false, message: 'product does not exist' })
+            return res.status(404).send({ status: false, message: 'product not found' })
         }
         return res.status(200).send({ status: true, data: product })
     } catch (error) {
@@ -215,18 +223,19 @@ const getProductById = async function(req, res) {
 const updateByProductId = async(req, res) => {
     try {
         let productId = req.params.productId
+        let data = req.body
+        let files= req.files
+        // console.log(files)
         const updateObject = {};
 
         if (!isValidObjectId(productId)) {
             return res.status(400).send({ status: false, message: " productId is not valid" })
         }
         const productFind = await productModel.findOne({ _id: productId, isDeleted: false });
-        if (!productFind) { return res.status(400).send({ status: false, msg: "No product found with this productId" }) }
-        let data = req.body
-        let files = req.files
-
-        if (!Object.keys(data).length && typeof files==="undefined"){ return res.status(400).send({ status: false, msg: " provide some data" }) }
-        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style,availableSizes, installments } = data
+        if (!productFind) { return res.status(404).send({ status: false, msg: "No product found with this productId" }) }
+        
+        if (!Object.keys(data).length && typeof files==='undefined') { return res.status(400).send({ status: false, msg: " provide some data" }) }
+        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
 
         if ("title" in data) {
             if (!isValid(title)) {
@@ -285,7 +294,7 @@ const updateByProductId = async(req, res) => {
                 if (!(/^[0-9]*$/.test(installments))) return res.status(400).send({ status: false, message: "Installment must be an integer" }) }
                 updateObject['installments'] = installments
 
-                    
+                    //  let files = req.files
                      if (files && files.length > 0) {
                           let uploadFileUrl = await aws.uploadFile(files[0])
                           updateObject['productImage'] = uploadFileUrl
@@ -297,8 +306,14 @@ const updateByProductId = async(req, res) => {
             //     return res.status(400).send({ status: false, Message: "availableSizes is required" })}
             
 
-            // let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
-            // let sizeArr = availableSizes.split(',').map(x => x.trim().toUpperCase())
+            let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
+            let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
+            
+            for (let i = 0; i < sizeArr.length; i++) {
+                if (!(arr.includes(sizeArr[i]))) {
+                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })}}}
+                    updateObject['availableSizes'] = availableSizes
+                
             
             // for (let i = 0; i < sizeArr.length; i++) {
             //     if (!(arr.includes(sizeArr[i]))) {
@@ -347,9 +362,7 @@ const updateByProductId = async(req, res) => {
             updateObject['isFreeShipping'] = isFreeShipping
         
 
-        let updateProduct = await productModel.findOneAndUpdate({ _id: productId }, 
-           
-         updateObject ,{ new: true })
+        let updateProduct = await productModel.findOneAndUpdate({ _id: productId }, updateObject ,{ new: true })
         return res.status(200).send({ status: true, msg: "product updated", data: updateProduct })
     } catch (error) {
         return res.status(500).send({ status: false, error: error.message })
@@ -359,7 +372,7 @@ const updateByProductId = async(req, res) => {
 //========================================DELETE /books/:bookId==========================================================
 
 
-const deleteproductsBYId = async function(req, res) {
+const deleteproductsById = async function(req, res) {
 
     try {
         let productId = req.params.productId
@@ -381,7 +394,7 @@ const deleteproductsBYId = async function(req, res) {
         let checkProduct = await productModel.findOne({ _id: productId, isDeleted: false })
 
         if (!checkProduct) {
-            return res.status(404).send({ status: false, message: 'Product already deleted' })
+            return res.status(404).send({ status: false, message: 'Product not found' })
         }
 
         let updateProduct = await productModel.findOneAndUpdate({ _id: productId, isDeleted: false }, { isDeleted: true, deletedAt: Date.now() }, { new: true })
@@ -396,7 +409,7 @@ const deleteproductsBYId = async function(req, res) {
 
 
 
-module.exports = { createProduct, getProduct, getProductById, updateByProductId, deleteproductsBYId }
+module.exports = { createProduct, getProduct, getProductById, updateByProductId, deleteproductsById }
 
 
 
