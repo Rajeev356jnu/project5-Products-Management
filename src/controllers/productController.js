@@ -223,8 +223,10 @@ const updateByProductId = async(req, res) => {
         const productFind = await productModel.findOne({ _id: productId, isDeleted: false });
         if (!productFind) { return res.status(400).send({ status: false, msg: "No product found with this productId" }) }
         let data = req.body
-        if (!Object.keys(data).length) { return res.status(400).send({ status: false, msg: " provide some data" }) }
-        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style, availableSizes, installments } = data
+        let files = req.files
+
+        if (!Object.keys(data).length && typeof files==="undefined"){ return res.status(400).send({ status: false, msg: " provide some data" }) }
+        let { title, description, price, currencyId, currencyFormat, isFreeShipping, style,availableSizes, installments } = data
 
         if ("title" in data) {
             if (!isValid(title)) {
@@ -283,27 +285,57 @@ const updateByProductId = async(req, res) => {
                 if (!(/^[0-9]*$/.test(installments))) return res.status(400).send({ status: false, message: "Installment must be an integer" }) }
                 updateObject['installments'] = installments
 
-                     let files = req.files
+                    
                      if (files && files.length > 0) {
                           let uploadFileUrl = await aws.uploadFile(files[0])
                           updateObject['productImage'] = uploadFileUrl
                          
                      }
             
-             if ("availableSizes" in data) {
-            if (!isValid(availableSizes)) {
-                return res.status(400).send({ status: false, Message: "availableSizes is required" })}
+            //  if ("availableSizes" in data) {
+            // if (!isValid(availableSizes)) {
+            //     return res.status(400).send({ status: false, Message: "availableSizes is required" })}
             
 
-            let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
-            let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
-            console.log(sizeArr)
-            for (let i = 0; i < sizeArr.length; i++) {
-                if (!(arr.includes(sizeArr[i]))) {
-                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })}}}
-                    updateObject['availableSizes'] = availableSizes
-                
+            // let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
+            // let sizeArr = availableSizes.split(',').map(x => x.trim().toUpperCase())
             
+            // for (let i = 0; i < sizeArr.length; i++) {
+            //     if (!(arr.includes(sizeArr[i]))) {
+            //         return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })}}}
+            //         updateObject['availableSizes'] = availableSizes
+
+            // let sizeKeys=['S','M','L','X','XS','XL','XXL']
+            // const sizeArray=availableSizes.trim().split(',').map(value=>value.trim().toUpperCase())
+            // for (let i = 0; i < sizeArray.length; i++) {
+            //     const sizePresent=sizeKeys.includes(sizeArray[i])
+            //     if (!sizePresent) {
+            //         return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })
+            //     }
+            //     updateObject['availableSizes'] = availableSizes
+            // }}
+            // var availableSize = availableSizes.toUpperCase().split(",") //Creating an array
+            // for (let i = 0; i < availableSize.length; i++) {
+            //     if (!(["S", "XS", "M", "X", "L", "XXL", "XL"]).includes(availableSize[i])) {
+            //         return res.status(400).send({ status: false, message: 'Sizes should be ${["S", "XS", "M", "X", "L", "XXL", "XL"]}' })
+            //     }
+            //     updateObject['availableSizes'] = availableSizes
+            // }}
+            
+            if (availableSizes) {
+                var availableSize = availableSizes.toUpperCase().split(",")//Creating an array
+                if (availableSize.length === 0) {
+                    return res.status(400).send({ status: false, message: "Please provide product sizes" })
+                }
+                for (let i = 0; i < availableSize.length; i++) {
+                    if (!(["S", "XS", "M", "X", "L", "XXL", "XL"]).includes(availableSize[i])) {
+                        return res.status(400).send({ status: false, message: 'Sizes should be ${["S", "XS", "M", "X", "L", "XXL", "XL"]}' })
+                    }
+                }
+                updateObject['availableSizes'] = availableSizes
+            }
+
+
             if ("isFreeShipping" in data) {
             if (!isValid(isFreeShipping)) {
                 return res.status(400).send({ status: false, Message: "isFreeShipping is required" })}

@@ -10,10 +10,10 @@ const isValid = function (value) {
     if (!value || typeof value != "string" || value.trim().length == 0) return false;
     return true;
 }
-const isValidFiles = (files) => {
-    if (files && files.length > 0)
-        return true;
-}
+// const isValidFiles = (files) => {
+//     if (files && files.length > 0)
+//         return true;
+// }
 
 const isValidRequestBody = function (requestBody) {
     return Object.keys(requestBody).length > 0
@@ -218,11 +218,12 @@ const updateUserProfile = async function (req, res) {
         }
 
         const data = req.body
-        const { fname, lname, email, phone, profileImage, password, address } = data
+        const files = req.files
+        const { fname, lname, email, phone,  password, address } = data
         const dataObject = {};
-
-        if (!Object.keys(data).length) {
-            return res.status(400).send({ status: false, msg: " provide some data to update." })
+     
+        if (!Object.keys(data).length && typeof files==="undefined" ) {
+            return res.status(400).send({ status: false, msg: " provide some data and files to update." })
         }
 
         if ("fname" in data) {
@@ -271,14 +272,15 @@ const updateUserProfile = async function (req, res) {
             dataObject['password'] = password1
         }
 
-
-
-        let files = req.files
+        
         if (files && files.length > 0) {
             let uploadFileUrl = await aws.uploadFile(files[0])
             dataObject['profileImage'] = uploadFileUrl
 
         }
+
+        
+      
 
         if (address) {
             let parseaddress = JSON.parse(address)
