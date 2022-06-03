@@ -225,7 +225,7 @@ const updateByProductId = async(req, res) => {
         let productId = req.params.productId
         let data = req.body
         let files= req.files
-        // console.log(files)
+        
         const updateObject = {};
 
         if (!isValidObjectId(productId)) {
@@ -301,57 +301,21 @@ const updateByProductId = async(req, res) => {
                          
                      }
             
-            //  if ("availableSizes" in data) {
-            // if (!isValid(availableSizes)) {
-            //     return res.status(400).send({ status: false, Message: "availableSizes is required" })}
+             if ("availableSizes" in data) {
+            if (!isValid(availableSizes)) {
+                return res.status(400).send({ status: false, Message: "availableSizes is required" })}
             
 
             let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
             let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
-            
-            for (let i = 0; i < sizeArr.length; i++) {
+
+             for (let i = 0; i < sizeArr.length; i++) {
                 if (!(arr.includes(sizeArr[i]))) {
-                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })}}}
+                    return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })}}}
                     updateObject['availableSizes'] = availableSizes
-                
-            
-            // for (let i = 0; i < sizeArr.length; i++) {
-            //     if (!(arr.includes(sizeArr[i]))) {
-            //         return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })}}}
-            //         updateObject['availableSizes'] = availableSizes
 
-            // let sizeKeys=['S','M','L','X','XS','XL','XXL']
-            // const sizeArray=availableSizes.trim().split(',').map(value=>value.trim().toUpperCase())
-            // for (let i = 0; i < sizeArray.length; i++) {
-            //     const sizePresent=sizeKeys.includes(sizeArray[i])
-            //     if (!sizePresent) {
-            //         return res.status(400).send({ status: false, message: "Please give proper sizes among XS,S,M,X,L,XXL,XL" })
-            //     }
-            //     updateObject['availableSizes'] = availableSizes
-            // }}
-            // var availableSize = availableSizes.toUpperCase().split(",") //Creating an array
-            // for (let i = 0; i < availableSize.length; i++) {
-            //     if (!(["S", "XS", "M", "X", "L", "XXL", "XL"]).includes(availableSize[i])) {
-            //         return res.status(400).send({ status: false, message: 'Sizes should be ${["S", "XS", "M", "X", "L", "XXL", "XL"]}' })
-            //     }
-            //     updateObject['availableSizes'] = availableSizes
-            // }}
-            
-            if (availableSizes) {
-                var availableSize = availableSizes.toUpperCase().split(",")//Creating an array
-                if (availableSize.length === 0) {
-                    return res.status(400).send({ status: false, message: "Please provide product sizes" })
-                }
-                for (let i = 0; i < availableSize.length; i++) {
-                    if (!(["S", "XS", "M", "X", "L", "XXL", "XL"]).includes(availableSize[i])) {
-                        return res.status(400).send({ status: false, message: 'Sizes should be ${["S", "XS", "M", "X", "L", "XXL", "XL"]}' })
-                    }
-                }
-                updateObject['availableSizes'] = availableSizes
-            }
-
-
-            if ("isFreeShipping" in data) {
+           
+           if ("isFreeShipping" in data) {
             if (!isValid(isFreeShipping)) {
                 return res.status(400).send({ status: false, Message: "isFreeShipping is required" })}
             
@@ -415,70 +379,70 @@ module.exports = { createProduct, getProduct, getProductById, updateByProductId,
 
 
 
-const getCart =  async function (req, res)  {
-    try {
-        let userId = req.params.userId;
-        let userIdfromToken = req.userId;
+// const getCart =  async function (req, res)  {
+//     try {
+//         let userId = req.params.userId;
+//         let userIdfromToken = req.userId;
         
-    if (!(isValidObjectId(userId))) {
-        return res.status(400).send({ status: false, msg: "invalid userId" })};
+//     if (!(isValidObjectId(userId))) {
+//         return res.status(400).send({ status: false, msg: "invalid userId" })};
 
-     let user = await userModel.findOne({ _id: userId });
-        if (!user)
-          return res.status(400).send({ status: false, msg: "no user found" });
+//      let user = await userModel.findOne({ _id: userId });
+//         if (!user)
+//           return res.status(400).send({ status: false, msg: "no user found" });
 
-  if (userId !== userIdfromToken)
-          return res.status(403).send({ status: false, msg: "unauthorized access" });
+//   if (userId !== userIdfromToken)
+//           return res.status(403).send({ status: false, msg: "unauthorized access" });
 
-          let findCart = await cartModel.findOne({ userId: userId });
+//           let findCart = await cartModel.findOne({ userId: userId });
   
-          if (!findCart){
-            return res.status(400).send({ status: false, msg: "no cart found" });
-          }
+//           if (!findCart){
+//             return res.status(400).send({ status: false, msg: "no cart found" });
+//           }
       
-          return res.status(200).send({ status: true, message: "Successfully fetched cart details", data: findCart });
-        } 
-        catch (error) {
-          return res.status(500).send({ status: false, msg: error.message });
-        }
-      }
-      module.exports.getCart = getCart
+//           return res.status(200).send({ status: true, message: "Successfully fetched cart details", data: findCart });
+//         } 
+//         catch (error) {
+//           return res.status(500).send({ status: false, msg: error.message });
+//         }
+//       }
+//       module.exports.getCart = getCart
 
 
 
 
-      const deleteCart = async function (req, res) {
-        try {
-            let userId = req.params.userId
-           let userIdFromToken = req.userId
-            if (! (isValidObjectId(userId))) {
-                return res.status(400).send({ status: false, message: "invalid userId" })}
+    //   const deleteCart = async function (req, res) {
+    //     try {
+    //         let userId = req.params.userId
+    //        let userIdFromToken = req.userId
+    //         if (! (isValidObjectId(userId))) {
+    //             return res.status(400).send({ status: false, message: "invalid userId" })}
             
-            let user = await userModel.findOne({ _id: userId });
-            if (!user)
-              return res.status(400).send({ status: false, msg: "no user found" });
-           if (userId !== userIdFromToken)
-              return res.status(403).send({ status: false, msg: "unauthorized access" });
+    //         let user = await userModel.findOne({ _id: userId });
+    //         if (!user)
+    //           return res.status(400).send({ status: false, msg: "no user found" });
+    //        if (userId !== userIdFromToken)
+    //           return res.status(403).send({ status: false, msg: "unauthorized access" });
     
-              let findCart = await cartModel.findOne({ userId: userId });
+    //           let findCart = await cartModel.findOne({ userId: userId });
   
-              if (!findCart){
-                return res.status(400).send({ status: false, msg: "no cart found" });
-              }
+    //           if (!findCart){
+    //             return res.status(400).send({ status: false, msg: "no cart found" });
+    //           }
 
-              let deleteChanges = await cartModel.findOneAndUpdate( { userId: userId },
+    //           let deleteChanges = await cartModel.findOneAndUpdate( { userId: userId },
                
-                { $set: { items: [], totalPrice: 0, totalItems: 0 } },
-                { new: true }
-              );
+    //             { $set: { items: [], totalPrice: 0, totalItems: 0 } },
+    //             { new: true }
+    //           );
           
-              return res.status(200).send({ status: true, message: "cart deleted successfullly", data: deleteChanges });
-            } 
-            catch (error) {
-              return res.status(500).send({ status: false, message: error.message });
-            }
-          };
-          module.exports.deleteCart =deleteCart
+    //           return res.status(200).send({ status: true, message: "cart deleted successfullly", data: deleteChanges });
+    //         } 
+    //         catch (error) {
+    //           return res.status(500).send({ status: false, message: error.message });
+    //         }
+    //       };
+    //       module.exports.deleteCart =deleteCart
 
 
 

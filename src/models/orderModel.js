@@ -43,10 +43,6 @@ const orderSchema = new mongoose.Schema({
     },
     deletedAt: {
         type: Date
-<<<<<<< HEAD
-        
-=======
->>>>>>> b61aba32ccca16478782643854cf594f9d490aba
     },
     isDeleted: {
         type: Boolean,
