@@ -287,8 +287,10 @@ const updateByProductId = async(req, res) => {
 
         if ("installments" in data) {
             if (!isValid(installments)) {
-                return res.status(400).send({ status: false, Message: "installments is required" })}
-                if (!(/^[0-9]*$/.test(installments))) return res.status(400).send({ status: false, message: "Installment must be an integer" }) }
+                return res.status(400).send({ status: false, Message: "installments is required" })
+               }
+            if (!(/^[0-9]*$/.test(installments))) return res.status(400).send({ status: false, message: "Installment must be an integer" }) 
+        }
                 updateObject['installments'] = installments
 
                     //  let files = req.files
@@ -299,17 +301,21 @@ const updateByProductId = async(req, res) => {
                      }
             
              if ("availableSizes" in data) {
-            if (!isValid(availableSizes)) {
-                return res.status(400).send({ status: false, Message: "availableSizes is required" })}
-            
+                if (!isValid(availableSizes)) {
+                    return res.status(400).send({ status: false, Message: "availableSizes is required" })
+                }
+             }
 
             let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
             let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
             
             for (let i = 0; i < sizeArr.length; i++) {
                 if (!(arr.includes(sizeArr[i]))) {
-                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })}}}
-                    updateObject['availableSizes'] = availableSizes
+                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })
+                }
+            }
+            
+            updateObject['availableSizes'] = [...sizeArr]
                 
             
             if ("isFreeShipping" in data) {
