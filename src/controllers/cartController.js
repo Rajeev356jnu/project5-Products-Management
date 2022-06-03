@@ -22,7 +22,7 @@ const isValidObjectId = function(objectId) {
 const createCart=async function(req,res){
     try {
         const userId=req.params.userId
-        const {productId}=req.body
+        const {productId,cartId}=req.body
         if (Object.keys(userId)==0) {
             return res.status(400).send({status:false,message:'kindly provide userid in path params'})
         }
@@ -46,9 +46,24 @@ const createCart=async function(req,res){
         if (!product) {
             return res.status(404).send({status:false,message:'this product not found'})
         }
+        const cart=await cartModel.findOne({userId:userId})
+        if ("cartId" in req.body) {
+            if (!isValid(cartId)) {
+                return res.status(400).send({status:false,message:'please enter cartId'})
+            }
+            if (!isValidObjectId(cartId)) {
+                return res.status(400).send({status:false,message:'Invalid cartId'})
+            }
+            if (!cart) {
+                return res.status(400).send({status:false,message:'cart not created yet.'})
+            }
+            if (cart._id!=cartId) {
+                return res.status(400).send({status:false,message:'please enter appropriate cartId.'})
+            }
+        }
+       
         const filterData={userId:userId,items:[],totalPrice:0,totalItems:0}
         
-        const cart=await cartModel.findOne({userId:userId})
         if (!cart) {
            const productObj={}
            productObj['productId']=productId
