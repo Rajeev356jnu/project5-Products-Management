@@ -88,23 +88,13 @@ const createUser = async function (req, res) {
 
         if (parseaddress) {
             if (parseaddress.shipping != undefined) {
-                if (parseaddress.shipping.street != undefined) {
-                    if (typeof parseaddress.shipping.street != 'string' || parseaddress.shipping.street.trim().length == 0) {
-                        return res.status(400).send({ status: false, message: "street can not be a empty string in shipping address" })
-                    }
+                if (!isValid(parseaddress.shipping.street)) return res.status(400).send({ status: false, Message: "Street is required in shipping address" })
+                if (!isValid(parseaddress.shipping.city)) return res.status(400).send({ status: false, Message: "city is required in shipping address" })
+                if (parseaddress.shipping.pincode != undefined || typeof parseaddress.shipping.pincode != "Number") {
+                    if (!isValid(parseaddress.shipping.pincode)) return res.status(400).send({ status: false, Message: "pincode is required in shipping address" })
+                    if (!(/^[1-9]{1}[0-9]{2}\s{0,1}[0-9]{3}$/).test(parseaddress.shipping.pincode)) return res.status(400).send({ status: false, Message: "pincode must be a 6-digit number in shipping address" })
                 }
 
-                if (parseaddress.shipping.city != undefined) {
-                    if (typeof parseaddress.shipping.city != 'string' || parseaddress.shipping.city.trim().length == 0) {
-                        return res.status(400).send({ status: false, message: "city can not be a empty string in shipping address" })
-                    }
-                }
-
-                if (parseaddress.shipping.pincode != undefined) {
-                    if (parseaddress.shipping.pincode.toString().trim().length == 0 || parseaddress.shipping.pincode.toString().trim().length != 6) {
-                        return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in shipping address" })
-                    }
-                }
             } else {
                 return res.status(400).send({ status: false, Message: "Please Provide your shipping address" })
             }
@@ -123,6 +113,7 @@ const createUser = async function (req, res) {
 
                 if (parseaddress.billing.pincode != undefined) {
                     if (parseaddress.billing.pincode.toString().trim().length == 0 || parseaddress.billing.pincode.toString().trim().length != 6) {
+                        if (!isValid(parseaddress.shipping.pincode)) return res.status(400).send({ status: false, Message: "pincode is required in billing address" })
                         return res.status(400).send({ status: false, message: "Pincode can not be a empty string or must be 6 digit number in billing address " })
                     }
                 }
@@ -130,6 +121,7 @@ const createUser = async function (req, res) {
                 return res.status(400).send({ status: false, Message: "Please Provide your billing address" })
             }
         }
+
         const salt = await bcrypt.genSalt(10);
         data.password = await bcrypt.hash(password, salt);
         data.profileImage = await aws.uploadFile(files[0])
