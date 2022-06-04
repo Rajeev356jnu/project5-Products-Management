@@ -152,7 +152,7 @@ const updateOrder=async function (req,res) {
         // if (order.status=='pending' && status.toLowerCase()=='cancelled' && order.cancellable==true) {
         //     const filterData={}
         //     filterData['isDeleted']=true
-        //     filterData['DeletedAt']=new Date()
+        //     filterData['DeletedAt']=Date.now()
         //     filterData['status']=status.toLowerCase()
         //     const updatedStatus=await orderModel.findOneAndUpdate({_id:orderId},filterData,{new:true})
         //     return res.status(200).send({status:true,message:'successfully updated the order status',data:updatedStatus})
@@ -174,7 +174,7 @@ const updateOrder=async function (req,res) {
         //     return res.status(400).send({status:false,message:'order is already cancelled'})
         // }
    
-
+    
     } catch (error) {
         return res.status(500).send({status:false,message:error.message})
     }

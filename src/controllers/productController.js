@@ -139,10 +139,10 @@ const getProduct = async function(req, res) {
         
         if (flag) {
             if ("priceLessThan" in queryData && 'priceGreaterThan' in queryData) {
-                if (isNaN(Number(priceLessThan)) || isNaN(Number(priceGreaterThan))) {
+                if (isNaN(Number(priceLessThan)) && isNaN(Number(priceGreaterThan))) {
                     return res.status(400).send({ status: false, message: 'please enter a valid price' })
                 }
-                if (priceGreaterThan <= 0 || priceLessThan<=0) {
+                if (priceGreaterThan <= 0 && priceLessThan<=0) {
                     return res.status(400).send({ status: false, message: 'price cannot be zero or less than zero' })
                 }
                 filter['price']={$gte:Number(priceGreaterThan),$lte:Number(priceLessThan)}
@@ -204,11 +204,11 @@ const getProductById = async function(req, res) {
         if (!isValidObjectId(productId)) {
             return res.status(400).send({ status: false, message: 'product id is invalid' })
         }
-        const product = await productModel.findById(productId)
+        const product = await productModel.findOne({_id:productId,isDeleted:false})
         if (!product) {
             return res.status(404).send({ status: false, message: 'product not found' })
         }
-        return res.status(200).send({ status: true, data: product })
+        return res.status(201).send({ status: true, data: product })
     } catch (error) {
         return res.status(500).send({ message: 'error', error: error.message })
     }
@@ -304,18 +304,19 @@ const updateByProductId = async(req, res) => {
                 if (!isValid(availableSizes)) {
                     return res.status(400).send({ status: false, Message: "availableSizes is required" })
                 }
+                let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
+                let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
+                
+                for (let i = 0; i < sizeArr.length; i++) {
+                    if (!(arr.includes(sizeArr[i]))) {
+                        return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })
+                    }
+                }
+                
+                updateObject['availableSizes'] = [...sizeArr]
              }
 
-            let arr = ["S", "XS", "M", "X", "L", "XXL", "XL"]
-            let sizeArr = availableSizes.split(",").map(x => x.trim().toUpperCase())
-            
-            for (let i = 0; i < sizeArr.length; i++) {
-                if (!(arr.includes(sizeArr[i]))) {
-                    return res.status(400).send({ status: false, message: `availableSizes should be among [${arr}]` })
-                }
-            }
-            
-            updateObject['availableSizes'] = [...sizeArr]
+           
                 
             
             if ("isFreeShipping" in data) {

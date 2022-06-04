@@ -123,7 +123,7 @@ const createUser = async function (req, res) {
         }
 
         const salt = await bcrypt.genSalt(10);
-        data.password = await bcrypt.hash(password, salt);
+        data.password = await bcrypt.hash(password, salt); //to encrypt the password
         data.profileImage = await aws.uploadFile(files[0])
 
         const userData = { fname: fname, lname: lname, profileImage: data.profileImage, email: email, phone: phone, password: data.password, address: parseaddress }
