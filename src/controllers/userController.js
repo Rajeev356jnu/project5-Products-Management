@@ -10,10 +10,10 @@ const isValid = function (value) {
     if (!value || typeof value != "string" || value.trim().length == 0) return false;
     return true;
 }
-// const isValidFiles = (files) => {
-//     if (files && files.length > 0)
-//         return true;
-// }
+const isValidFiles = (files) => {
+    if (files && files.length > 0)
+        return true;
+}
 
 const isValidRequestBody = function (requestBody) {
     return Object.keys(requestBody).length > 0

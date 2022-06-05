@@ -23,9 +23,9 @@ const createCart=async function(req,res){
     try {
         const userId=req.params.userId
         const {productId}=req.body
-        if (Object.keys(userId)==0) {
-            return res.status(400).send({status:false,message:'kindly provide userid in path params'})
-        }
+        // if (Object.keys(userId)==0) {
+        //     return res.status(400).send({status:false,message:'kindly provide userid in path params'})
+        // }
         if (!isValidObjectId(userId)) {
             return res.status(400).send({status:false,message:'Invalid userid'})
         }
@@ -86,9 +86,9 @@ const updateCart=async function (req,res) {
         const data=req.body
         const userId=req.params.userId
         const {cartId,productId,removeProduct}=data
-        if (Object.keys(userId)==0) {
-            return res.status(400).send({status:false,message:'kindly provide userid in path params'})
-        }
+        // if (Object.keys(userId)==0) {
+        //     return res.status(400).send({status:false,message:'kindly provide userid in path params'})
+        // }
         if (!isValidObjectId(userId)) {
             return res.status(400).send({status:false,message:'Invalid userid'})
         }

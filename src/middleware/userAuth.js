@@ -12,6 +12,7 @@ const authentication = async function (req, res, next) {
         if (!token) return res.status(400).send({ status: false, message: "login is required" })
 
         let splitToken = token.split(" ")
+       
 
         let verifiedtoken = jwt.verify(splitToken[1], "securedprivatekey")
         if (!verifiedtoken) return res.status(400).send({ status: false, message: "token is invalid" })

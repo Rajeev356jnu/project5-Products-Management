@@ -133,7 +133,8 @@ const updateOrder=async function (req,res) {
         if (!order) {
             return res.status(403).send({status:false,message:'order not found'})
         }
-        if (order._id!=userId) {
+        belongsToUser = await orderModel.findOne({ userId: userId })
+        if (!belongsToUser) {
             return res.status(400).send({status:false,Message:'this order does not belong to you,enter appropriate order id'})
         }
         if (order.cancellable==true) {

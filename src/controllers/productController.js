@@ -116,7 +116,7 @@ const getProduct = async function(req, res) {
         const queryData = req.query
         let filter = { isDeleted: false }
         const { size, name, priceGreaterThan, priceLessThan, priceSort } = queryData
-        // console.log(priceGreaterThan)
+        
         if (isValid(size)) {
             let sizeKeys=['S','M','L','X','XS','XL','XXL']
             const sizeArray=size.trim().split(',').map(value=>value.trim().toUpperCase())
