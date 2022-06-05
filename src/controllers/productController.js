@@ -198,17 +198,17 @@ const getProduct = async function(req, res) {
 const getProductById = async function(req, res) {
     try {
         const productId = req.params.productId
-        if (Object.keys(productId) == 0) {
-            return res.status(400).send({ status: false, message: 'kindly provide product is in params path' })
-        }
+        // if (Object.keys(productId) == 0) {
+        //     return res.status(400).send({ status: false, message: 'kindly provide product is in params path' })
+        // }
         if (!isValidObjectId(productId)) {
             return res.status(400).send({ status: false, message: 'product id is invalid' })
         }
-        const product = await productModel.findOne({_id:productId,isDeleted:false})
+        const product = await productModel.find({_id:productId,isDeleted:false})
         if (!product) {
             return res.status(404).send({ status: false, message: 'product not found' })
         }
-        return res.status(201).send({ status: true, data: product })
+        return res.status(200).send({ status: true, data: product })
     } catch (error) {
         return res.status(500).send({ message: 'error', error: error.message })
     }
@@ -383,74 +383,5 @@ module.exports = { createProduct, getProduct, getProductById, updateByProductId,
 
 
 
-// const getCart =  async function (req, res)  {
-//     try {
-//         let userId = req.params.userId;
-//         let userIdfromToken = req.userId;
-        
-//     if (!(isValidObjectId(userId))) {
-//         return res.status(400).send({ status: false, msg: "invalid userId" })};
 
-//      let user = await userModel.findOne({ _id: userId });
-//         if (!user)
-//           return res.status(400).send({ status: false, msg: "no user found" });
-
-//   if (userId !== userIdfromToken)
-//           return res.status(403).send({ status: false, msg: "unauthorized access" });
-
-//           let findCart = await cartModel.findOne({ userId: userId });
-  
-//           if (!findCart){
-//             return res.status(400).send({ status: false, msg: "no cart found" });
-//           }
-      
-//           return res.status(200).send({ status: true, message: "Successfully fetched cart details", data: findCart });
-//         } 
-//         catch (error) {
-//           return res.status(500).send({ status: false, msg: error.message });
-//         }
-//       }
-//       module.exports.getCart = getCart
-
-
-
-
-    //   const deleteCart = async function (req, res) {
-    //     try {
-    //         let userId = req.params.userId
-    //        let userIdFromToken = req.userId
-    //         if (! (isValidObjectId(userId))) {
-    //             return res.status(400).send({ status: false, message: "invalid userId" })}
-            
-    //         let user = await userModel.findOne({ _id: userId });
-    //         if (!user)
-    //           return res.status(400).send({ status: false, msg: "no user found" });
-    //        if (userId !== userIdFromToken)
-    //           return res.status(403).send({ status: false, msg: "unauthorized access" });
-    
-    //           let findCart = await cartModel.findOne({ userId: userId });
-  
-    //           if (!findCart){
-    //             return res.status(400).send({ status: false, msg: "no cart found" });
-    //           }
-
-    //           let deleteChanges = await cartModel.findOneAndUpdate( { userId: userId },
-               
-    //             { $set: { items: [], totalPrice: 0, totalItems: 0 } },
-    //             { new: true }
-    //           );
-          
-    //           return res.status(200).send({ status: true, message: "cart deleted successfullly", data: deleteChanges });
-    //         } 
-    //         catch (error) {
-    //           return res.status(500).send({ status: false, message: error.message });
-    //         }
-    //       };
-    //       module.exports.deleteCart =deleteCart
-
-
-
-
-    
-    
     

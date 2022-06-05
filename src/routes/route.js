@@ -20,6 +20,7 @@ router.post('/products', productController.createProduct);
 
 router.put('/products/:productId', productController.updateByProductId);
 router.get('/products', productController.getProduct)
+router.get('/products/:productId', productController.getProductById);
 router.delete('/products/:productId', productController.deleteproductsById);
 
 //cart routes
