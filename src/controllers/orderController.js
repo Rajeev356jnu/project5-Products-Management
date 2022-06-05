@@ -1,6 +1,6 @@
+const { default: mongoose } = require('mongoose');
 const cartModel=require('../models/cartModel');
 const orderModel = require('../models/orderModel');
-const productModel=require('../models/productModel');
 const userModel = require('../models/userModel');
 
 //validation Part
@@ -27,7 +27,7 @@ const createOrder = async(req, res) => {
         let data = req.body
         let { cartId, cancellable, status } = data
 
-        if (isValidObjectId(userId)) {
+        if (!isValidObjectId(userId)) {
             return res.status(400).send({ status: false, message: "userId is invalid!" })
         }
 
@@ -49,7 +49,7 @@ const createOrder = async(req, res) => {
 
         const findCart = await cartModel.findOne({ _id: cartId, userId: userId })
         if (!findCart) {
-            return res.status(400).send({ status: false, message: "No Cart found" })
+            return res.status(404).send({ status: false, message: "No Cart found" })
         }
 
         let itemsArr = findCart.items
@@ -65,6 +65,7 @@ const createOrder = async(req, res) => {
         let newData = {
             userId: userId,
             items: findCart.items,
+            totalItems:findCart.totalItems,
             totalPrice: findCart.totalPrice,
             totalQuantity: sum,
         }
@@ -86,20 +87,20 @@ const createOrder = async(req, res) => {
             if (!isValid(status)) {
                 return res.status(400).send({ status: false, message: "Please enter status" });
             }
+            if (!["pending", "completed", "cancelled"].includes(status)) {
+                return res.status(400).send({ status: false, message: "Status must be a pending, completed, cancelled" });
+            }
+            newData.status = status
         }
-        if (!["pending", "completed", "cancelled"].includes(status)) {
-            return res.status(400).send({ status: false, message: "Status must be a pending, completed, cancelled" });
-        }
-
-        newData.status = status
-
+      
         const orderCreated = await orderModel.create(newData)
+        await cartModel.findOneAndUpdate({_id:cartId},{items:[],totalItems:0,totalPrice:0})
 
-        findCart.items = []
-        findCart.totalItems = 0
-        findCart.totalPrice = 0
-        findCart.save()
-        return res.status(200).send({ status: false, message: "Success", data: orderCreated });
+        // findCart.items = []
+        // findCart.totalItems = 0
+        // findCart.totalPrice = 0
+        // findCart.save()
+        return res.status(201).send({ status: false, message: "Order Placed!!", data: orderCreated });
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message });
     }
@@ -111,7 +112,6 @@ const updateOrder=async function (req,res) {
     try {
         const userId=req.params.userId
         const {orderId}=req.body
-        
         
         if (!isValidObjectId(userId)) {
             return res.status(400).send({status:false,message:'invalid userid!!'})
@@ -129,31 +129,30 @@ const updateOrder=async function (req,res) {
         if (!isValidObjectId(orderId)) {
             return res.status(400).send({status:false,message:'invalid orderId'})
         }
-        const order=await orderModel.findOne({_id:orderId,isDeleted:false})
+        const order=await orderModel.findOne({_id:orderId,userId:userId,isDeleted:false})
         if (!order) {
-            return res.status(403).send({status:false,message:'order not found'})
+            return res.status(404).send({status:false,message:'order not found'})
         }
-        belongsToUser = await orderModel.findOne({ userId: userId })
-        if (!belongsToUser) {
-            return res.status(400).send({status:false,Message:'this order does not belong to you,enter appropriate order id'})
-        }
+        // if (order._id!=userId) {
+        //     return res.status(400).send({status:false,Message:'this order does not belong to you,enter appropriate order id'})
+        // }
         if (order.cancellable==true) {
             const filterData={}
             filterData['isDeleted']=true
-            filterData['DeletedAt']=new Date()
+            filterData['deletedAt']= Date.now()
             filterData['status']='cancelled'
             const updatedStatus=await orderModel.findOneAndUpdate({_id:orderId},filterData,{new:true})
             return res.status(200).send({status:true,message:'successfully updated the order status',data:updatedStatus})
         }
         else{
-            return res.status(200).send({status:true,message:'Once order placed ,it can not be cancelled'})
+            return res.status(200).send({status:true,message:'this order can not be cancelled'})
         }
 
         
         // if (order.status=='pending' && status.toLowerCase()=='cancelled' && order.cancellable==true) {
         //     const filterData={}
         //     filterData['isDeleted']=true
-        //     filterData['DeletedAt']=new Date()
+        //     filterData['DeletedAt']=Date.now()
         //     filterData['status']=status.toLowerCase()
         //     const updatedStatus=await orderModel.findOneAndUpdate({_id:orderId},filterData,{new:true})
         //     return res.status(200).send({status:true,message:'successfully updated the order status',data:updatedStatus})
@@ -175,7 +174,7 @@ const updateOrder=async function (req,res) {
         //     return res.status(400).send({status:false,message:'order is already cancelled'})
         // }
    
-
+    
     } catch (error) {
         return res.status(500).send({status:false,message:error.message})
     }
